@@ -1,28 +1,32 @@
-// src/app/api/ai/enhance/route.ts
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { geminiService } from "@/services/gemini";
+import { handleError } from "@/utils/AppError";
+import { z } from "zod";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+const enhanceRequestSchema = z.object({
+  text: z.string().min(10, "Text must be at least 10 characters").max(10000, "Text is too long"),
+  action: z.enum(['summarize', 'expand', 'improve', 'simplify', 'translate', 'tags', 'questions', 'actionItems', 'outline', 'critique']),
+  language: z.string().optional(),
+});
 
 export async function POST(req: Request) {
   try {
-    const { text } = await req.json();
+    const body = await req.json();
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
-    });
+    // Validate input
+    const result = enhanceRequestSchema.safeParse(body);
+    if (!result.success) {
+      return Response.json(
+        { error: "Validation Error", details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
 
-    const result = await model.generateContent(text);
-    const response = await result.response;
-    const enhanced = response.text();
+    const { text, action, language } = result.data;
+    const enhanced = await geminiService.enhanceText(text, action, language);
 
-    return Response.json({ enhanced });
+    return Response.json({ result: enhanced });
   } catch (error) {
-    console.error("AI Enhance Error:", error);
-
-    const message =
-      error instanceof Error ? error.message : "Unknown server error";
-
-    return Response.json({ error: message }, { status: 500 });
+    const { message, statusCode } = handleError(error);
+    return Response.json({ error: message }, { status: statusCode });
   }
 }
-

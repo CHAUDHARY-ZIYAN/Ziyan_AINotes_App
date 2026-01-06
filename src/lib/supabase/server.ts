@@ -1,14 +1,3 @@
-// src/lib/supabase/server.ts
-// src/lib/supabase/server.ts
-// src/lib/supabase/client.ts
-// import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-// import { cookies } from 'next/headers';
-// import type { Database } from '@/types/supabase';
-
-// export function createServerClient() {
-//   return createServerComponentClient<Database>({ cookies });
-// }
-// src/lib/supabase/server.ts
 import { createServerClient as createSSRClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/supabase';
@@ -30,21 +19,11 @@ export const createServerClient = () => {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Server component, ignore
+            // Server component - cannot set cookies after headers are sent
+            // This is expected behavior in Supabase SSR
           }
         },
       },
     }
   );
 };
-
-
-
-// import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-// import { cookies } from 'next/headers';
-// import type { Database } from '@/types/supabase';
-
-// export const createServerClient = () => {
-//   const cookieStore = cookies();
-//   return createServerComponentClient<Database>({ cookies: () => cookieStore });
-// };

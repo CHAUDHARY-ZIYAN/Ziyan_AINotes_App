@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Database } from '@/types/supabase';
+import { getErrorMessage, logger } from '@/lib/utils';
 
 type Workspace = Database['public']['Tables']['workspaces']['Row'];
 
@@ -79,9 +80,9 @@ export default function NewCategoryPage() {
         router.push('/dashboard');
         router.refresh();
       }, 500);
-    } catch (error: any) {
-      console.error('Create error:', error);
-      toast.error(error.message || 'Failed to create category');
+    } catch (error: unknown) {
+      logger.error('Create error:', error);
+      toast.error(getErrorMessage(error) || 'Failed to create category');
     } finally {
       setLoading(false);
     }

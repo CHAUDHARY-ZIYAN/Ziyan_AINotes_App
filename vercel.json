@@ -1,0 +1,6 @@
+{
+    "name": "ziyankhan-my-notes",
+    "framework": "nextjs",
+    "buildCommand": "npm run build",
+    "outputDirectory": ".next"
+}

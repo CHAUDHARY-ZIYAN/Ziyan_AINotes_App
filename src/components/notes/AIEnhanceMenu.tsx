@@ -1,4 +1,3 @@
-// src/components/notes/AIEnhanceMenu.tsx
 'use client';
 
 import { useState } from 'react';
@@ -15,6 +14,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getErrorMessage, logger } from '@/lib/utils';
 
 interface AIEnhanceMenuProps {
   content: string;
@@ -24,7 +24,6 @@ interface AIEnhanceMenuProps {
 
 export default function AIEnhanceMenu({
   content,
-  onInsert,
   onReplace,
 }: AIEnhanceMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +46,7 @@ export default function AIEnhanceMenu({
       const response = await fetch('/api/ai/enhance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: content, action,language, }),
+        body: JSON.stringify({ text: content, action, language, }),
       });
 
       const data = await response.json();
@@ -66,10 +65,10 @@ export default function AIEnhanceMenu({
         // For now, we'll replace the content. Later we can add a preview modal
         onReplace(data.result);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.dismiss(loadingToast);
-      toast.error(error.message || 'Failed to enhance note');
-      console.error('Enhancement error:', error);
+      toast.error(getErrorMessage(error) || 'Failed to enhance note');
+      logger.error('Enhancement error:', error);
     } finally {
       setLoading(false);
     }

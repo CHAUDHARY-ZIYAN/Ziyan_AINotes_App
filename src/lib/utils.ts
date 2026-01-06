@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export function formatDate(date: string | Date) {
@@ -21,3 +21,21 @@ export function getInitials(name: string) {
     .toUpperCase()
     .slice(0, 2);
 }
+
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+export const logger = {
+  error: (message: string, error?: unknown) => {
+    // In production, this would send to Sentry/LogRocket
+    console.error(message, error);
+  },
+  warn: (message: string, data?: unknown) => {
+    console.warn(message, data);
+  },
+  info: (message: string, data?: unknown) => {
+    console.info(message, data);
+  },
+};

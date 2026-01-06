@@ -85,111 +85,276 @@ Set up Supabase:
 * Run the SQL file located at `database/schema.sql`
 * Obtain your API keys from the project settings
 
-Add environment variables by creating `.env.local`:
+# Take-Notes App
+
+A modern, real-time collaborative note-taking application powered by AI.
+
+## 🚀 Features
+
+- **Rich Text Editor**: Advanced editor with markdown support, syntax highlighting, and media embedding.
+- **AI-Powered**: Summarize, translate, and enhance notes using Google Gemini AI.
+- **Real-time Collaboration**: Sync notes across devices instantly with Supabase Realtime.
+- **Organization**: Categorize notes, add tags, and search efficiently.
+- **Secure**: Role-based access control and secure authentication.
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 14 (App Router), React 18, Tailwind CSS, TypeScript
+- **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime)
+- **AI**: Google Gemini API
+- **State Management**: Zustand
+- **Validation**: Zod
+- **Testing**: Jest, React Testing Library
+
+# MyNotes - AI-Powered Note-Taking Application
+
+A modern, collaborative note-taking application built with Next.js 14, Supabase, and Google Gemini AI.
+
+## ✨ Features
+
+- 📝 **Rich Note Editor** - Create and organize notes with markdown support
+- 🤖 **AI Enhancement** - Powered by Google Gemini for intelligent text improvements
+- 🔄 **Real-time Sync** - Collaborative editing with live updates
+- 📁 **Workspaces** - Organize notes into shared workspaces
+- 🏷️ **Categories** - Tag and categorize your notes
+- 🔍 **Smart Search** - Fast full-text search across all notes
+- 🔐 **Secure** - Row-level security with Supabase
+- 📱 **Responsive** - Works seamlessly on desktop and mobile
+
+## � Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Supabase account ([sign up free](https://supabase.com))
+- Google AI Studio account ([get API key](https://aistudio.google.com/app/apikey))
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd my-notes-app-f
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Edit `.env.local` and add your credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   GOOGLE_API_KEY=your_gemini_api_key
+   ```
+
+4. **Set up Supabase database**
+   - Create a new Supabase project
+   - Run the database migrations (see [Database Setup](#database-setup))
+   - Enable Row Level Security policies (see [Security](#security))
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 📦 Database Setup
+
+### Required Tables
+
+Your Supabase project needs these tables:
+- `profiles` - User profiles
+- `workspaces` - Note workspaces
+- `workspace_members` - Workspace collaborators
+- `categories` - Note categories
+- `notes` - Main notes table
+- `note_versions` - Version history
+- `note_collaborators` - Note sharing
+- `note_categories` - Note-category relationships
+
+### RLS Policies
+
+Row Level Security policies are **critical** for data isolation. See `rls_verification_guide.md` for complete policy setup.
+
+**Quick verification:**
+```sql
+-- Check RLS is enabled
+SELECT tablename, rowsecurity 
+FROM pg_tables 
+WHERE schemaname = 'public';
+```
+
+All tables should show `rowsecurity = true`.
+
+## 🏗️ Tech Stack
+
+- **Framework:** Next.js 14 (App Router)
+- **Database:** Supabase (PostgreSQL)
+- **Authentication:** Supabase Auth
+- **AI:** Google Gemini API
+- **Styling:** Tailwind CSS
+- **State Management:** Zustand
+- **Type Safety:** TypeScript
+- **Testing:** Jest + React Testing Library
+
+## 📁 Project Structure
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+src/
+├── app/                    # Next.js app router pages
+│   ├── (auth)/            # Authentication pages
+│   ├── (dashboard)/       # Dashboard pages
+│   └── api/               # API routes
+├── components/            # React components
+│   ├── dashboard/         # Dashboard-specific components
+│   └── ui/                # Reusable UI components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utilities and configurations
+├── services/              # API service layers
+│   ├── notes.ts          # Note operations
+│   ├── workspaces.ts     # Workspace operations
+│   ├── categories.ts     # Category operations
+│   └── gemini.ts         # AI integration
+├── store/                 # Zustand state management
+├── types/                 # TypeScript type definitions
+└── utils/                 # Helper functions
 ```
 
-Start the development server:
+## 🧪 Testing
 
-```
-npm run dev
-```
+```bash
+# Run all tests
+npm test
 
-The app will run at `http://localhost:3000`.
+# Run tests in watch mode
+npm test -- --watch
 
-## Project Structure
-
-```
-my-notes-app/
-├── src/
-│   ├── app/
-│   │   ├── (auth)/
-│   │   ├── (dashboard)/
-│   │   ├── api/
-│   │   └── layout.tsx
-│   ├── components/
-│   │   ├── editor/
-│   │   ├── dashboard/
-│   │   └── notes/
-│   ├── lib/
-│   │   ├── supabase/
-│   │   └── utils.ts
-│   └── types/
-│       └── supabase.ts
-├── public/
-└── package.json
+# Run tests with coverage
+npm test -- --coverage
 ```
 
-## Database Schema
+## 🔒 Security
 
-Core tables include:
+### Environment Variables
 
-* profiles
-* workspaces
-* notes
-* categories
-* note_versions
-* note_collaborators
+- ✅ `GOOGLE_API_KEY` - Server-side only (in `/api` routes)
+- ✅ `NEXT_PUBLIC_SUPABASE_URL` - Public (safe to expose)
+- ✅ `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Public (safe to expose)
 
-All tables support secure access through Supabase RLS.
+### Row Level Security
 
-## Deployment
+All database tables have RLS enabled with policies ensuring:
+- Users can only access their own notes
+- Workspace members can view shared workspaces
+- Only workspace owners can manage members
+- Proper data isolation between users
 
-### Vercel Deployment
+See `rls_analysis_report.md` for detailed security audit.
 
-1. Push your project to GitHub:
+## 🚢 Deployment
 
+### Deploy to Vercel (Recommended)
+
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push origin main
+   ```
+
+2. **Deploy to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Import your repository
+   - Add environment variables
+   - Deploy!
+
+See `DEPLOYMENT.md` for detailed deployment instructions.
+
+### Build Locally
+
+```bash
+# Production build
+npm run build
+
+# Start production server
+npm start
 ```
-git add .
-git commit -m "Initial commit"
-git push origin main
+
+## 📚 Documentation
+
+- `implementation_plan.md` - Production readiness plan
+- `DEPLOYMENT.md` - Deployment guide
+- `rls_verification_guide.md` - Security policy setup
+- `rls_analysis_report.md` - Security audit results
+- `p0_fixes_verification.md` - P0 fixes verification
+- `walkthrough.md` - Refactoring walkthrough
+
+## 🛠️ Development
+
+### Code Quality
+
+```bash
+# Lint code
+npm run lint
+
+# Type check
+npm run type-check
+
+# Format code
+npm run format
 ```
 
-2. Open Vercel and import your repository
-3. Add your environment variables
-4. Deploy the project
+### Architecture
 
-## Screenshots
+This project follows a **service layer architecture**:
+- **Pages** - UI and routing
+- **Components** - Reusable UI elements
+- **Services** - Business logic and data access
+- **Hooks** - Shared stateful logic
+- **Store** - Global state management
 
-* Dashboard view
-* Note editor
-* Workspace selector
-* Pinned notes
-![alt text](<Screenshot 2025-11-17 at 6.38.00 PM.png>)
-![alt text](<Screenshot 2025-11-17 at 6.37.34 PM.png>)
-## Key Highlights for Resume
+**Key Principles:**
+- ✅ No direct database calls in components
+- ✅ All data access through service layer
+- ✅ Centralized error handling
+- ✅ Type-safe throughout
 
-* Developed a production-grade full-stack application using Next.js and Supabase
-* Implemented automatic version control with rollback
-* Designed a normalized PostgreSQL database with multi-tenant security
-* Built a rich text editor with TipTap including advanced formatting features
-* Integrated OAuth and real-time synchronization
-* Achieved high performance through code-splitting and server rendering
-* Tech stack includes Next.js, TypeScript, Supabase, TipTap, Tailwind CSS
+## 🤝 Contributing
 
-## Future Improvements
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-* AI-powered features
-* Mobile app
-* Offline support
-* Real-time multi-user collaboration
-* Advanced filtering
-* Note templates
-* Dark mode
-* Export to PDF and Markdown
+## 📄 License
 
-## Author
+This project is licensed under the MIT License.
 
-Ziyan Khan
-GitHub: [https://github.com/CHAUDHARY-ZIYAN]
-LinkedIn: [https://www.linkedin.com/in/ziyan-khan]
-Portfolio: [https://yourwebsite.com](https://yourwebsite.com)
+## 🙏 Acknowledgments
 
-## License
+- [Next.js](https://nextjs.org/) - React framework
+- [Supabase](https://supabase.com/) - Backend as a service
+- [Google Gemini](https://ai.google.dev/) - AI capabilities
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Lucide Icons](https://lucide.dev/) - Icon library
 
-MIT License. You may use this project for learning or personal development.
+## 📞 Support
 
+For issues and questions:
+- Open an issue on GitHub
+- Check existing documentation
+- Review the deployment guide
+
+---
+
+**Built with ❤️ using Next.js and Supabase**

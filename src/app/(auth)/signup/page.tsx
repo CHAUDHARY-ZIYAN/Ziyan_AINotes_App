@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BookOpen, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getErrorMessage, logger } from '@/lib/utils';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
@@ -51,15 +52,15 @@ export default function SignUpPage() {
       if (error) throw error;
 
       if (data.user) {
-        toast.success('Account created! Please check your email to verify.');
-        // Redirect to signin after a delay
+        toast.success('Account created! Redirecting to dashboard...');
+        // Redirect to dashboard
         setTimeout(() => {
-          router.push('/signin');
-        }, 2000);
+          router.push('/dashboard');
+        }, 1000);
       }
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      toast.error(error.message || 'Failed to create account');
+    } catch (error: unknown) {
+      logger.error('Signup error:', error);
+      toast.error(getErrorMessage(error) || 'Failed to create account');
     } finally {
       setLoading(false);
     }
@@ -75,8 +76,8 @@ export default function SignUpPage() {
       });
 
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign up with Google');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error) || 'Failed to sign up with Google');
     }
   };
 

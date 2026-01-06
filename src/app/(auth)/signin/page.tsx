@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BookOpen, Mail, Lock, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getErrorMessage, logger } from '@/lib/utils';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -34,9 +35,9 @@ export default function SignInPage() {
         router.push('/dashboard');
         router.refresh();
       }
-    } catch (error: any) {
-      console.error('Signin error:', error);
-      toast.error(error.message || 'Invalid email or password');
+    } catch (error: unknown) {
+      logger.error('Signin error:', error);
+      toast.error(getErrorMessage(error) || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -52,8 +53,8 @@ export default function SignInPage() {
       });
 
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in with Google');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error) || 'Failed to sign in with Google');
     }
   };
 

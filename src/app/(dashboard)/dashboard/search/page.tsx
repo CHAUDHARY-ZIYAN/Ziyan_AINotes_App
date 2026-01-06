@@ -2,16 +2,20 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Search, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
-import type { Database } from '@/types/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { noteService } from '@/services/notes';
+import { Note } from '@/types/supabase';
+import toast from 'react-hot-toast';
+import { handleError } from '@/utils/AppError';
 
-type Note = Database['public']['Tables']['notes']['Row'];
+import { useWorkspaces } from '@/contexts/WorkspaceContext';
 
 export default function SearchPage() {
-  const supabase = createClient();
+  const { user } = useAuth();
+  const { currentWorkspace } = useWorkspaces();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,26 +28,23 @@ export default function SearchPage() {
       return;
     }
 
+    if (!user) {
+      toast.error('Please sign in to search notes');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('created_by', user.id)
-        .eq('is_archived', false)
-        .or(`title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`)
-        .order('updated_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-
-      setResults(data || []);
+      const data = await noteService.searchNotes(user.id, searchQuery);
+      // Filter by current workspace if one is selected
+      const filtered = currentWorkspace
+        ? data.filter(note => note.workspace_id === currentWorkspace.id)
+        : data;
+      setResults(filtered);
     } catch (error) {
-      console.error('Search error:', error);
+      const { message } = handleError(error);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ export default function SearchPage() {
           {results.map((note) => (
             <Link
               key={note.id}
-              href={`/dashboard/notes/${note.id}`}
+              href={`/ dashboard / notes / ${note.id} `}
               className="flex items-center gap-4 p-4 hover:bg-gray-50 transition border-b border-gray-100 last:border-b-0"
             >
               <span className="text-3xl">{note.emoji}</span>

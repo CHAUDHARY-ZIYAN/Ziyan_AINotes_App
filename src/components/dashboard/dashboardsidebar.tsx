@@ -1,59 +1,35 @@
-// src/components/dashboard/DashboardSidebar.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen,
   Home,
   FileText,
-  Tag,
+  Search,
   Archive,
   Settings,
   Plus,
   ChevronDown,
-  Search,
+  Tag,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, logger } from '@/lib/utils';
 
-export type Workspace = {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  description: string | null;
-  owner_id: string | null;
-  is_personal: boolean | null;
-  created_at: string | null;
-  updated_at: string | null;
-};
+import { workspaceService } from '@/services/workspaces';
+import { categoryService } from '@/services/categories';
+import { Workspace, Category } from '@/types/supabase';
 
 
-export type Category = {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  parent_id: string | null;
-  workspace_id: string | null;
-  position: number | null;
-  created_at: string | null;
-};
+import { useWorkspaces } from '@/contexts/WorkspaceContext';
 
-
-export default function DashboardSidebar({ user, profile }: any) {
+export default function DashboardSidebar() {
+  const { user } = useAuth();
   const pathname = usePathname();
-  const supabase = createClient();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const { workspaces, currentWorkspace, setCurrentWorkspace } = useWorkspaces();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showWorkspaces, setShowWorkspaces] = useState(false);
-
-  useEffect(() => {
-    loadWorkspaces();
-  }, []);
 
   useEffect(() => {
     if (currentWorkspace) {
@@ -61,39 +37,26 @@ export default function DashboardSidebar({ user, profile }: any) {
     }
   }, [currentWorkspace]);
 
-  const loadWorkspaces = async () => {
-    const { data } = await supabase
-      .from('workspaces')
-      .select('*')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: true });
-
-    if (data && data.length > 0) {
-      setWorkspaces(data);
-      // Set first workspace as current (usually "Personal")
-      setCurrentWorkspace(data[0]);
-    }
-  };
-
   const loadCategories = async (workspaceId: string) => {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .is('parent_id', null)
-      .order('position', { ascending: true });
-
-    if (data) {
-      setCategories(data);
+    try {
+      const data = await categoryService.getCategories(workspaceId);
+      if (data) {
+        setCategories(data);
+      }
+    } catch (error: unknown) {
+      logger.error('Failed to load categories in sidebar:', error);
     }
   };
 
   const navItems = [
-    { icon: Home, label: 'All Notes', href: '/dashboard' },
+    { icon: Home, label: 'Dashboard', href: '/dashboard' },
     { icon: FileText, label: 'Recent', href: '/dashboard/recent' },
+    { icon: Search, label: 'Search', href: '/dashboard/search' },
     { icon: Tag, label: 'Tags', href: '/dashboard/tags' },
     { icon: Archive, label: 'Archived', href: '/dashboard/archived' },
   ];
+
+  if (!user) return null;
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -144,17 +107,14 @@ export default function DashboardSidebar({ user, profile }: any) {
                 <span className="truncate">{workspace.name}</span>
               </button>
             ))}
-            <button
-              onClick={() => {
-                setShowWorkspaces(false);
-                // TODO: Navigate to create workspace page
-                alert('Create workspace feature coming soon!');
-              }}
+            <Link
+              href="/dashboard/create-workspace"
+              onClick={() => setShowWorkspaces(false)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
             >
               <Plus className="w-4 h-4" />
               <span>New Workspace</span>
-            </button>
+            </Link>
           </div>
         )}
       </div>
@@ -174,7 +134,10 @@ export default function DashboardSidebar({ user, profile }: any) {
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          // Exact match for dashboard home, startsWith for others to handle sub-routes
+          const isActive = item.href === '/dashboard'
+            ? pathname === item.href
+            : pathname?.startsWith(item.href);
 
           return (
             <Link
@@ -200,12 +163,12 @@ export default function DashboardSidebar({ user, profile }: any) {
               <span className="text-xs font-semibold text-gray-500 uppercase">
                 Categories
               </span>
-              <button
-                onClick={() => alert('Category management coming soon!')}
+              <Link
+                href="/dashboard/categories/new"
                 className="p-1 hover:bg-gray-100 rounded"
               >
                 <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              </button>
+              </Link>
             </div>
 
             <div className="space-y-1">
@@ -219,7 +182,7 @@ export default function DashboardSidebar({ user, profile }: any) {
                   <span className="flex-1 truncate">{category.name}</span>
                   <div
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: category.color ?? undefined  }}
+                    style={{ backgroundColor: category.color ?? undefined }}
                   />
                 </Link>
               ))}
